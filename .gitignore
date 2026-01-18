@@ -1,0 +1,73 @@
+# NSEC Cache Datastore Demo - Git Ignore
+
+# Environment
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.pytest_cache/
+.mypy_cache/
+
+# Virtual environments
+venv/
+ENV/
+.venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Generated files
+results/*.json
+auth/logs/*.log
+auth/zones/*.db
+auth/zones/*.signed
+auth/zones/*.meta
+auth/keys/K*
+recursor/logs/*.log
+
+# Docker
+.docker/
+
+# OS
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.temp
+
+# Keep directory structure but ignore contents
+results/*.json
+auth/logs/*.log
+auth/zones/*.db
+auth/zones/*.signed
+auth/zones/*.meta
+auth/keys/K*
+recursor/logs/*.log
+!results/.gitkeep
+!auth/logs/.gitkeep
+!auth/zones/.gitkeep
+!recursor/logs/.gitkeep
+!auth/keys/.gitkeep

@@ -1,0 +1,81 @@
+version: '3.8'
+
+services:
+  auth:
+    build: ./auth
+    container_name: nsec-auth
+    hostname: auth
+    networks:
+      dnsnet:
+        ipv4_address: 172.28.0.2
+    volumes:
+      - ./auth/logs:/var/log/named
+      - ./auth/zones:/var/cache/bind/zones
+      - ./auth/keys:/var/cache/bind/keys
+    environment:
+      - ZONE_NAME=${ZONE_NAME}
+      - TTL=${TTL}
+      - MESSAGE=${MESSAGE}
+      - CHUNK_SIZE=${CHUNK_SIZE}
+    healthcheck:
+      test: ["CMD", "dig", "@127.0.0.1", "zone.test.", "SOA", "+short"]
+      interval: 2s
+      timeout: 2s
+      retries: 10
+      start_period: 5s
+
+  recursor:
+    build: ./recursor
+    container_name: nsec-recursor
+    hostname: recursor
+    depends_on:
+      auth:
+        condition: service_healthy
+    networks:
+      dnsnet:
+        ipv4_address: 172.28.0.3
+    volumes:
+      - ./recursor/logs:/var/log/unbound
+      - ./auth/keys:/keys:ro
+    environment:
+      - AUTH_IP=172.28.0.2
+    healthcheck:
+      test: ["CMD", "dig", "@127.0.0.1", "+short", "version.server", "CH", "TXT"]
+      interval: 2s
+      timeout: 2s
+      retries: 10
+      start_period: 3s
+
+  client:
+    build: ./client
+    container_name: nsec-client
+    hostname: client
+    depends_on:
+      recursor:
+        condition: service_healthy
+    networks:
+      dnsnet:
+        ipv4_address: 172.28.0.4
+    volumes:
+      - ./client:/app
+      - ./auth/logs:/auth-logs:ro
+      - ./auth/zones:/auth-zones:ro
+      - ./results:/results
+    environment:
+      - ZONE_NAME=${ZONE_NAME}
+      - TTL=${TTL}
+      - MESSAGE=${MESSAGE}
+      - CHUNK_SIZE=${CHUNK_SIZE}
+      - RESOLVER_IP=172.28.0.3
+      - AUTH_LOG_PATH=/auth-logs/query.log
+    working_dir: /app
+    stdin_open: true
+    tty: true
+    command: ["tail", "-f", "/dev/null"]
+
+networks:
+  dnsnet:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
